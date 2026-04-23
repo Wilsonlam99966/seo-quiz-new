@@ -1,0 +1,888 @@
+import { useState, useEffect, useRef } from "react";
+
+const FontLoader = () => {
+  useEffect(() => {
+    const link = document.createElement("link");
+    link.href = "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Lora:ital,wght@0,500;0,600;1,400&display=swap";
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+  }, []);
+  return null;
+};
+
+const T = {
+  bg: "#F8F6F2",
+  surface: "#FFFFFF",
+  surfaceAlt: "#F5F3EF",
+  border: "#E5DFD6",
+  borderStrong: "#CEC5B8",
+  text: "#1C1A17",
+  textSub: "#6B6460",
+  textMuted: "#A39D97",
+  accent: "#C95E2B",
+  accentDark: "#A84A1F",
+  accentLight: "#FDF1EC",
+  accentBorder: "#F0BFA0",
+  success: "#166534",
+  successBg: "#F0FDF4",
+  successBorder: "#86EFAC",
+  successText: "#15803D",
+  error: "#991B1B",
+  errorBg: "#FEF2F2",
+  errorBorder: "#FECACA",
+  errorText: "#DC2626",
+  onPage:  { accent: "#0F766E", bg: "#F0FDFA", border: "#99F6E4", badge: "#CCFBF1", badgeText: "#0F766E" },
+  tech:    { accent: "#1D4ED8", bg: "#EFF6FF", border: "#BFDBFE", badge: "#DBEAFE", badgeText: "#1E40AF" },
+  offPage: { accent: "#7C3AED", bg: "#F5F3FF", border: "#C4B5FD", badge: "#EDE9FE", badgeText: "#6D28D9" },
+  diffBeginner:     { bg: "#F0FDF4", text: "#166534", border: "#86EFAC" },
+  diffIntermediate: { bg: "#FFFBEB", text: "#92400E", border: "#FCD34D" },
+  diffAdvanced:     { bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
+};
+
+const QUESTIONS = [
+  // ═══ ON-PAGE SEO (7 questions) ════════════════════════════════════
+  {
+    id: 1, cat: "On-Page SEO", diff: "Beginner",
+    context: "📝  You're optimising a 1,500-word listicle for a SaaS review site targeting the keyword 'best project management tools'.",
+    question: "Which title tag is MOST optimised for both rankings and click-through rate?",
+    options: [
+      "Best Project Management Tools | Your Site Name",
+      "Top 10 Best Project Management Tools for Teams in 2024",
+      "Project Management Software Review & Comparison Guide",
+      "Tools for Managing Projects — A Complete Overview",
+    ],
+    correct: 1,
+    explanation: "Option B front-loads the exact-match keyword, includes a power number ('Top 10') that lifts CTR by signalling a list, adds a year for freshness, and stays within the ~60-character SERP display limit. Option A is clean but lacks intent-matching modifiers. C and D dilute keyword relevance and miss the list-based search intent entirely.",
+  },
+  {
+    id: 2, cat: "On-Page SEO", diff: "Intermediate",
+    context: "🔍  GSC shows your page ranks #4 for 'CRM software for small business' — 12,000 impressions/month — but CTR is only 2.1% against a 5% category benchmark.",
+    question: "What is your FIRST and highest-leverage action to increase clicks without rebuilding the page?",
+    options: [
+      "Add more internal links pointing to the page to strengthen its authority signal",
+      "Rewrite the meta description with a clear value proposition and a call-to-action",
+      "Increase the word count from 800 to 2,000 words for better topical coverage",
+      "Add FAQ schema markup to expand the SERP snippet footprint",
+    ],
+    correct: 1,
+    explanation: "A poor CTR at position #4 is primarily a meta-description problem. A compelling rewrite with a benefit statement and CTA directly influences user click behaviour at zero development cost. FAQ schema (D) is valid but secondary — fix the copy first. Internal links improve authority, not CTR. Word count affects rankings, not direct CTR from a stable position.",
+  },
+  {
+    id: 3, cat: "On-Page SEO", diff: "Intermediate",
+    context: "⚠️  Two of your pages compete for 'email marketing best practices': a blog post at position 8 and a guide at position 11. Both have unique angles but nearly identical search intent.",
+    question: "What is the correct strategy for resolving this content cannibalization?",
+    options: [
+      "Delete the lower-ranking page immediately and 301 redirect it to the stronger one",
+      "Add a noindex tag to the lower-ranking page to consolidate crawl budget",
+      "Audit both pages, merge the best content into one URL, then 301 redirect the other",
+      "Retarget one page to a closely related keyword so they no longer compete",
+    ],
+    correct: 2,
+    explanation: "Content consolidation (merge + 301) is the gold standard. Simply deleting (A) risks destroying unique content and backlinks. A noindex (B) removes the page from search but wastes the content asset and its link equity. Retargeting (D) only works if the pages genuinely serve different intents — when intent is the same, consolidation is required. Merging combines link equity, engagement signals, and depth into one authoritative page.",
+  },
+  {
+    id: 4, cat: "On-Page SEO", diff: "Beginner",
+    context: "🖼️  An e-commerce product page for 'red leather running shoes' has its hero image alt text set to 'shoe123.jpg' — the raw filename.",
+    question: "Which replacement alt text follows SEO and accessibility best practices?",
+    options: [
+      "image",
+      "red leather running shoes product photo",
+      "buy red leather running shoes online cheap free shipping",
+      "shoes",
+    ],
+    correct: 1,
+    explanation: "Good alt text accurately describes the image, includes the primary keyword naturally, and supports screen-reader accessibility. Option B does all three. Option C is keyword-stuffed with commercial intent phrases Google treats as manipulative. Options A and D are too vague to provide meaningful context for either crawlers or visually impaired users.",
+  },
+  {
+    id: 5, cat: "On-Page SEO", diff: "Advanced",
+    context: "❓  A home improvement site wants its DIY articles to appear in Google's 'People Also Ask' boxes for the query 'how to fix a leaky faucet'.",
+    question: "Which content signal does Google MOST rely on to determine PAA box eligibility?",
+    options: [
+      "H2 headers that exactly match the PAA question word-for-word",
+      "A self-contained 40–60 word paragraph that directly answers the question near the top of the content",
+      "A minimum of 5 outbound links to authoritative plumbing resources",
+      "Content that has been refreshed or republished within the last 30 days",
+    ],
+    correct: 1,
+    explanation: "Google extracts PAA answers from concise, self-contained paragraphs (typically 40–60 words) that directly answer the question without requiring surrounding context. Exact-match H2s are not required — semantic clarity and directness matter more. Freshness and outbound links are not confirmed eligibility factors for PAA inclusion.",
+  },
+  {
+    id: 6, cat: "On-Page SEO", diff: "Intermediate",
+    context: "📊  Your page ranks #12 for 'marketing automation software'. Top-5 competitors all use 'best marketing automation tools' in their H1 and title, while yours says 'software'. Keyword research shows 'tools' has 2× the search volume.",
+    question: "What does this discrepancy indicate and what is the correct fix?",
+    options: [
+      "The H1 mismatch is causing a manual penalty — change it immediately before further drops occur",
+      "There is a keyword intent and topical alignment gap — update H1, title tag, and on-page language to match what users search for",
+      "H1 tags have no direct ranking impact — invest the time in building more backlinks instead",
+      "The competitors are keyword stuffing — avoid copying their practice",
+    ],
+    correct: 1,
+    explanation: "This is a topical alignment issue, not a penalty. 'Tools' signals a listicle/comparison intent while 'software' implies a product page — and intent determines which pages Google rewards. Matching SERP language in H1 and title strengthens relevance signals holistically. H1 does influence rankings as a semantic signal, though it's not the sole factor.",
+  },
+  {
+    id: 7, cat: "On-Page SEO", diff: "Advanced",
+    context: "🔗  Your site has a pillar page 'Complete Guide to Email Marketing' (40 referring domains) and 8 cluster content pages on specific subtopics like subject lines, segmentation, and A/B testing.",
+    question: "Which internal linking architecture BEST distributes authority and signals topical depth to Google?",
+    options: [
+      "Hub-and-spoke: cluster pages link to the pillar AND the pillar links back to all clusters (bidirectional)",
+      "Linear chain: cluster pages link to each other sequentially in a content series",
+      "Flat mesh: every page links to every other page to maximise crawl interconnectivity",
+      "One-way waterfall: the pillar links out to clusters, but clusters do not link back",
+    ],
+    correct: 0,
+    explanation: "Hub-and-spoke (topic cluster) architecture is the gold standard for topical authority. Bidirectional linking passes PageRank efficiently between pillar and clusters, reinforces content hierarchy, and signals comprehensive topic coverage. Linear chains don't pass authority back to the pillar. Flat meshes dilute link equity across too many paths. One-way linking misses the authority feedback loop from clusters back to the pillar page.",
+  },
+
+  // ═══ TECHNICAL SEO (7 questions) ══════════════════════════════════
+  {
+    id: 8, cat: "Technical SEO", diff: "Beginner",
+    context: "🕸️  A site audit finds 300 pages returning a 200 HTTP status but displaying 'No results found' in the body — typically empty faceted filter URLs like /shop?color=red&size=XS.",
+    question: "What is this issue called and what is the correct technical fix?",
+    options: [
+      "Crawl trap — add a robots.txt Disallow rule to block all filter URL patterns",
+      "Soft 404 — return a proper 404/410 HTTP status, or add a noindex meta tag to these pages",
+      "Thin content — add 300+ words of boilerplate text to fill each empty page",
+      "Duplicate content — add a canonical tag on each pointing to the main category page",
+    ],
+    correct: 1,
+    explanation: "These are 'Soft 404s' — pages that return 200 OK but serve no useful content. The correct fix is a proper 404/410 HTTP status or a noindex meta tag. Soft 404s waste crawl budget, confuse Googlebot, and dilute index quality. Adding filler text (C) is a cosmetic workaround. Canonicals (D) help with duplicates but don't solve the core signal that these pages should not exist in the index.",
+  },
+  {
+    id: 9, cat: "Technical SEO", diff: "Intermediate",
+    context: "🔒  A site completed an HTTP → HTTPS migration. The SSL certificate is valid and confirmed working. Despite this, organic traffic drops 35% over 3 weeks. The dev team insists everything was migrated.",
+    question: "What is the MOST likely cause of the sustained traffic drop?",
+    options: [
+      "Google penalised the site algorithmically for changing the URL structure to HTTPS",
+      "Mixed content errors — hard-coded HTTP asset URLs on HTTPS pages are breaking page experience signals",
+      "The XML sitemap was not updated to HTTPS URLs, preventing Googlebot from re-indexing pages",
+      "301 redirect chains from HTTP to HTTPS are too long, causing crawl budget waste",
+    ],
+    correct: 1,
+    explanation: "Mixed content is the most common cause of post-migration traffic loss. HTTP images and scripts on HTTPS pages trigger browser security warnings, hurt Core Web Vitals scores, and cause Googlebot to treat pages as insecure. An outdated sitemap (C) slows re-crawl but can't explain a 35% drop. Redirect chains (D) can cause issues but are far less impactful than mixed content at scale. Google doesn't algorithmically penalise HTTPS migration itself.",
+  },
+  {
+    id: 10, cat: "Technical SEO", diff: "Advanced",
+    context: "⚙️  A React SPA loads all product data via API calls after the initial HTML shell renders. GSC shows dozens of key product pages as 'Crawled – currently not indexed'.",
+    question: "Which implementation gives Google the BEST ability to index the dynamic content?",
+    options: [
+      "Submit a comprehensive XML sitemap with all product URLs and ping GSC to trigger recrawling",
+      "Implement Server-Side Rendering (SSR) or Static Site Generation (SSG) for all critical product pages",
+      "Use dynamic rendering: serve fully pre-rendered HTML to Googlebot while users receive client-side rendering",
+      "Add <link rel='preload'> hints for all JavaScript bundles to speed up their parsing",
+    ],
+    correct: 1,
+    explanation: "SSR/SSG is the gold standard — Googlebot receives fully rendered HTML on the first request with no JavaScript execution delay required. Dynamic rendering (C) is a valid Google-endorsed workaround but creates two rendering pipelines to maintain and is considered a stepping stone. Sitemaps (A) improve discovery but don't solve the fundamental rendering problem. Preload hints (D) improve speed but don't fix indexability of JavaScript-dependent content.",
+  },
+  {
+    id: 11, cat: "Technical SEO", diff: "Advanced",
+    context: "📊  PageSpeed Insights flags a lead-gen page with LCP of 4.2s and INP of 380ms. Third-party chat widgets, ad pixels, and analytics scripts are identified as blocking the main thread.",
+    question: "Which Core Web Vitals metric is MOST directly impacted by third-party scripts blocking the main thread?",
+    options: [
+      "LCP (Largest Contentful Paint) — third-party scripts delay the server's initial response time",
+      "INP (Interaction to Next Paint) — third-party scripts occupy the main thread, slowing the browser's response to all user interactions",
+      "CLS (Cumulative Layout Shift) — ad scripts inject elements after load that shift the visible layout",
+      "FID (First Input Delay) — scripts delay how quickly the browser registers the very first click",
+    ],
+    correct: 1,
+    explanation: "INP replaced FID as a Core Web Vital in March 2024. It measures interaction responsiveness throughout the entire page lifecycle. Third-party scripts are the #1 cause of poor INP because they continuously occupy the main thread, preventing the browser from quickly processing any user interaction. LCP can also be affected by render-blocking scripts, but main thread occupation maps most directly to interaction responsiveness — the metric INP measures.",
+  },
+  {
+    id: 12, cat: "Technical SEO", diff: "Advanced",
+    context: "🌍  An international e-commerce site sells in the UK, Australia, and Canada — all in English. It uses /uk/, /au/, and /ca/ subdirectories and sees duplicate content warnings in GSC.",
+    question: "What is the CORRECT hreflang implementation for this setup?",
+    options: [
+      "Hreflang is only needed for different languages — same-language regional variants don't require it",
+      "Implement hreflang with en-GB, en-AU, en-CA tags, and an x-default tag pointing to the global fallback page",
+      "Add canonical tags from /au/ and /ca/ pointing to /uk/ as the authoritative master version",
+      "Set hreflang='en' on all pages — Google will auto-detect regional targeting from content signals",
+    ],
+    correct: 1,
+    explanation: "Hreflang IS required for same-language, different-region targeting. It tells Google precisely which version to serve users in each country, resolving the duplicate content issue. The x-default tag is required as a fallback for unlisted regions. Canonicaling /au/ and /ca/ to /uk/ (C) would destroy international targeting by collapsing all regions to one URL. Setting only hreflang='en' without a region code (D) doesn't help Google distinguish between regional variants.",
+  },
+  {
+    id: 13, cat: "Technical SEO", diff: "Intermediate",
+    context: "🕷️  A 500,000-URL e-commerce site has important product pages showing as 'Discovered – currently not indexed' in GSC. Crawl stats show 40% of Googlebot's budget consumed by faceted URLs like /category?color=red&size=M&sort=price.",
+    question: "What is the BEST action to recover crawl budget for important product pages?",
+    options: [
+      "Submit all 500,000 URLs in an XML sitemap to compel Google to crawl and index all of them",
+      "Block faceted navigation parameters in robots.txt or configure them using GSC URL Parameter Handling",
+      "Improve server TTFB (Time to First Byte) so Googlebot can process pages more quickly per visit",
+      "Add self-referencing rel='canonical' tags to every product page",
+    ],
+    correct: 1,
+    explanation: "Crawl budget is being consumed by parameter-generated duplicates. Blocking or de-prioritising faceted URLs frees up Googlebot's attention for important product pages. A large sitemap (A) doesn't fix budget waste — Google still discovers and crawls all found URLs regardless. Self-referencing canonicals (D) help signal the preferred URL but don't prevent Googlebot from visiting junk URLs first. TTFB improvements (C) help overall health but don't redirect crawl attention to priority pages.",
+  },
+  {
+    id: 14, cat: "Technical SEO", diff: "Intermediate",
+    context: "🗺️  Your sitemap.xml audit reveals: 800 URLs returning 301 redirects, 200 returning 404 errors, 1,500 noindexed pages, and 400 URLs blocked by robots.txt — out of 12,000 total submitted URLs.",
+    question: "What should you fix FIRST to restore sitemap quality?",
+    options: [
+      "Split the sitemap into multiple smaller files since 12,000 URLs is approaching Google's per-file limit",
+      "Remove all non-200-status, noindexed, and robots-blocked URLs so the sitemap only contains canonical indexable pages",
+      "Compress the sitemap using gzip to improve Googlebot's parsing and download efficiency",
+      "Add <lastmod> timestamps to all URLs to signal content freshness and recrawl priority",
+    ],
+    correct: 1,
+    explanation: "A sitemap should only contain canonical, indexable, 200-OK URLs. Including redirects, 404s, noindexed pages, and blocked URLs sends conflicting signals and erodes the sitemap's reliability as a crawl guide. Google's limit is 50,000 URLs or 50MB per file — so size isn't an issue here. Gzip (C) and lastmod dates (D) are valid improvements but are secondary to fixing the foundational URL quality problem first.",
+  },
+
+  // ═══ OFF-PAGE SEO (6 questions) ══════════════════════════════════
+  {
+    id: 15, cat: "Off-Page SEO", diff: "Beginner",
+    context: "🔗  A competitor has 500 total backlinks from 120 unique referring domains. Your site has 600 total backlinks from only 40 unique referring domains. Both sites are in the same niche.",
+    question: "Who has the stronger link profile and why?",
+    options: [
+      "You do — you have 100 more total backlinks and PageRank accumulates with every individual link",
+      "Your competitor — they have 3× more unique referring domains, signalling broader independent editorial trust",
+      "It's equal — total link volume and domain diversity balance each other out",
+      "You do — Google counts each backlink individually for its PageRank calculation",
+    ],
+    correct: 1,
+    explanation: "Referring domain count is far more important than total backlinks. 120 independent sites endorsing a domain signals broad, organic trust. Multiple links from the same domain yield steeply diminishing returns in Google's algorithms. Your competitor's profile is substantially stronger — their backlinks come from 3× as many independent sources, which is the primary quality signal Google weighs.",
+  },
+  {
+    id: 16, cat: "Off-Page SEO", diff: "Intermediate",
+    context: "⚠️  GSC shows a manual action notification: 'Unnatural links pointing to your site.' Organic traffic has dropped 60% in the two weeks since it appeared.",
+    question: "What is the CORRECT sequence of actions to recover from this penalty?",
+    options: [
+      "Immediately upload a disavow file to GSC and submit a reconsideration request to Google",
+      "Audit all backlinks → contact webmasters to remove spammy links → disavow remaining toxic links → submit a reconsideration request with documented evidence of all outreach",
+      "Migrate the site to a new domain to cleanly escape the manual penalty",
+      "Build a large volume of high-quality links to dilute the toxic ones, then submit a reconsideration request",
+    ],
+    correct: 1,
+    explanation: "Google's guidelines require a good-faith effort to manually remove links before relying on the disavow tool. The correct sequence: (1) export all backlinks from GSC and third-party tools, (2) categorise toxic links, (3) email webmasters for removal with documented outreach attempts, (4) disavow remaining toxic links in 'domain:' format, (5) submit a detailed reconsideration request with evidence. Skipping the removal attempt is the most common reason reconsideration requests are rejected.",
+  },
+  {
+    id: 17, cat: "Off-Page SEO", diff: "Advanced",
+    context: "💸  A fintech startup has a $5,000/month link-building budget. The team is debating mass guest posting, digital PR with original research, and paid niche edits into existing articles.",
+    question: "Which strategy offers the BEST risk-adjusted ROI in the current search landscape?",
+    options: [
+      "Mass guest posting on DA30+ blogs with keyword-rich anchor text across multiple domains",
+      "Digital PR — creating original data studies and pitching them to journalists for editorial coverage",
+      "Paid niche edits — inserting links into existing high-traffic, aged articles via vendor networks",
+      "Skyscraper technique — creating better content than top-ranking pages and conducting link outreach",
+    ],
+    correct: 1,
+    explanation: "Digital PR with original data earns editorial links — the highest-quality type — from authoritative news sites. It's fully white-hat, builds brand signals simultaneously, and scales well. Mass guest posting (A) at scale violates Google's link scheme guidelines and carries manual action risk. Paid niche edits (C) are effective but risky and can be flagged as paid links. Skyscraper (D) is a content strategy that still requires its own outreach effort to acquire links.",
+  },
+  {
+    id: 18, cat: "Off-Page SEO", diff: "Intermediate",
+    context: "🧪  You audit a site's backlink anchor text and find: 65% exact-match keyword anchors ('best savings account'), 15% branded, 10% naked URL, 10% generic ('click here', 'read more').",
+    question: "What does this distribution indicate, and what action should you take?",
+    options: [
+      "The profile is healthy — high keyword anchor ratios prove strong topical relevance to Google",
+      "This is a heavily over-optimised, unnatural profile that signals link manipulation and risks an algorithmic penalty — diversify immediately",
+      "The generic anchors are the problem — replacing them with keyword anchors would improve relevance signals",
+      "Anchor text distribution only matters during a manual review, not for algorithmic ranking assessments",
+    ],
+    correct: 1,
+    explanation: "A natural backlink profile typically has only 2–5% exact-match keyword anchors. At 65%, this is a textbook red flag for link manipulation. A healthy distribution skews toward branded (40–50%), naked URL (20–30%), and generic (10–20%) anchors, with keyword anchors as a small minority. This pattern was specifically targeted by Google's Penguin algorithm. Immediate diversification through new high-quality links and selective disavowal is needed.",
+  },
+  {
+    id: 19, cat: "Off-Page SEO", diff: "Advanced",
+    context: "🏥  A health and wellness site publishing nutrition and supplement articles has seen declining rankings since a broad core algorithm update — despite having a strong backlink profile.",
+    question: "Which improvement would MOST directly address E-E-A-T signals for this YMYL (Your Money or Your Life) site?",
+    options: [
+      "Increase all health articles to 3,000+ words to demonstrate comprehensive topic coverage",
+      "Add credentialed author bylines (RD, MD), link to detailed author bio pages, and document a formal medical review process with reviewer credentials",
+      "Build additional backlinks from .edu and .gov domains to boost overall domain authority",
+      "Add publication and last-updated dates to every article to signal content freshness",
+    ],
+    correct: 1,
+    explanation: "E-E-A-T for YMYL health content is most directly tied to demonstrated author expertise and editorial trustworthiness. Google's Quality Rater Guidelines explicitly require evidence of expert authorship in health content. Author credentials, bio pages, and a transparent medical review process are the highest-signal improvements available. .edu/.gov links (C) help domain authority but don't fix on-page E-E-A-T. Word count and freshness dates are minor factors compared to demonstrable human expertise.",
+  },
+  {
+    id: 20, cat: "Off-Page SEO", diff: "Intermediate",
+    context: "💡  A brand monitoring tool shows that TechCrunch has mentioned your SaaS product 'DataSync' three times in recent articles — but has never hyperlinked to your website in any of them.",
+    question: "What is the BEST approach to capitalise on these unlinked brand mentions?",
+    options: [
+      "Wait — unlinked brand mentions pass 'implied link' co-citation value without a hyperlink",
+      "Send a polite, personalised outreach email to the journalist pointing out the mention and requesting a link attribution",
+      "Build reciprocal links to TechCrunch articles to incentivise them to link back as a courtesy",
+      "Submit a copyright or attribution complaint to TechCrunch's editorial team to compel them to add a link",
+    ],
+    correct: 1,
+    explanation: "Unlinked brand mention reclamation is one of the highest-ROI link tactics available. The journalist already knows and wrote about your product positively — success rates are far higher than cold outreach (typically 15–30% with major publications). A courteous email noting the mention and requesting attribution is standard professional practice. 'Implied links' (A) are theorised but not confirmed to pass ranking signals. Reciprocal links (C) violate Google's link scheme guidelines.",
+  },
+];
+
+const CATS = {
+  "On-Page SEO":   { emoji: "📄", color: { accent: "#0F766E", bg: "#F0FDFA", border: "#99F6E4", badge: "#CCFBF1", badgeText: "#0F766E" } },
+  "Technical SEO": { emoji: "⚙️",  color: { accent: "#1D4ED8", bg: "#EFF6FF", border: "#BFDBFE", badge: "#DBEAFE", badgeText: "#1E40AF" } },
+  "Off-Page SEO":  { emoji: "🔗", color: { accent: "#7C3AED", bg: "#F5F3FF", border: "#C4B5FD", badge: "#EDE9FE", badgeText: "#6D28D9" } },
+};
+const DIFFS = {
+  Beginner:     { bg: "#F0FDF4", text: "#166534", border: "#86EFAC" },
+  Intermediate: { bg: "#FFFBEB", text: "#92400E", border: "#FCD34D" },
+  Advanced:     { bg: "#FEF2F2", text: "#991B1B", border: "#FECACA" },
+};
+const LEVELS = [
+  { min: 0,  max: 5,  label: "SEO Learner",     emoji: "🌱", color: "#16A34A", desc: "You're building your foundation. Focus on on-page fundamentals, crawlability basics, and keyword research principles to grow." },
+  { min: 6,  max: 10, label: "SEO Practitioner", emoji: "📈", color: "#D97706", desc: "Solid core knowledge across the main pillars. Deepen your technical skills and link analysis to move to the next level." },
+  { min: 11, max: 15, label: "SEO Strategist",   emoji: "🎯", color: "#C95E2B", desc: "Strong across all three SEO pillars. You can lead audits, drive measurable results, and manage cross-functional projects." },
+  { min: 16, max: 20, label: "SEO Expert",       emoji: "🏆", color: "#7C3AED", desc: "Elite-level understanding. You think in systems, anticipate algorithm behaviour, and can architect full SEO programmes." },
+];
+
+/* ─── REUSABLE COMPONENTS ─────────────────────────────────────────── */
+function Badge({ children, colors }) {
+  return (
+    <span style={{
+      background: colors.bg || colors.badge,
+      color: colors.text || colors.badgeText,
+      border: `1.5px solid ${colors.border}`,
+      borderRadius: "99px", padding: "4px 13px",
+      fontSize: "12px", fontWeight: 700,
+      display: "inline-flex", alignItems: "center", gap: "5px",
+      letterSpacing: "0.1px",
+    }}>{children}</span>
+  );
+}
+
+function Btn({ children, onClick, variant = "primary", disabled = false, full = false, style: extStyle = {} }) {
+  const [hov, setHov] = useState(false);
+  const styles = {
+    primary: {
+      background: disabled ? "#D4C5BB" : hov ? T.accentDark : T.accent,
+      color: "#fff",
+      boxShadow: (!disabled && hov) ? "0 6px 20px rgba(201,94,43,0.32)" : "0 1px 4px rgba(201,94,43,0.18)",
+    },
+    secondary: {
+      background: hov ? T.surfaceAlt : T.surface,
+      color: T.text,
+      border: `1.5px solid ${T.border}`,
+      boxShadow: hov ? "0 2px 10px rgba(0,0,0,0.08)" : "none",
+    },
+    ghost: {
+      background: "transparent",
+      color: T.textSub,
+      boxShadow: "none",
+    },
+    success: {
+      background: hov ? "#15803D" : "#16A34A",
+      color: "#fff",
+      boxShadow: hov ? "0 6px 20px rgba(22,163,74,0.28)" : "0 1px 4px rgba(22,163,74,0.15)",
+    },
+  };
+  return (
+    <button
+      onClick={!disabled ? onClick : undefined}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        padding: "13px 26px", borderRadius: "10px", border: "none",
+        fontSize: "15px", fontWeight: 700, cursor: disabled ? "not-allowed" : "pointer",
+        fontFamily: "inherit", transition: "all 0.18s ease",
+        display: "inline-flex", alignItems: "center", gap: "8px",
+        width: full ? "100%" : "auto", justifyContent: "center",
+        opacity: disabled ? 0.5 : 1,
+        letterSpacing: "0.15px",
+        ...styles[variant],
+        ...extStyle,
+      }}
+    >{children}</button>
+  );
+}
+
+/* ─── MAIN APP ──────────────────────────────────────────────────────── */
+export default function SEOQuiz() {
+  const [screen, setScreen] = useState("intro");
+  const [qIdx, setQIdx]   = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [selected, setSelected] = useState(null);
+  const [revealed, setRevealed] = useState(false);
+  const [filterCat, setFilterCat] = useState("All");
+  const topRef = useRef(null);
+
+  const q = QUESTIONS[qIdx];
+  const score = QUESTIONS.filter(qq => answers[qq.id] === qq.correct).length;
+  const level = LEVELS.find(l => score >= l.min && score <= l.max) || LEVELS[0];
+  const catStats = Object.keys(CATS).map(cat => {
+    const qs = QUESTIONS.filter(qq => qq.cat === cat);
+    const correct = qs.filter(qq => answers[qq.id] === qq.correct).length;
+    return { cat, correct, total: qs.length, pct: Math.round((correct / qs.length) * 100) };
+  });
+
+  const handleSubmit = () => {
+    if (selected === null) return;
+    setAnswers(prev => ({ ...prev, [q.id]: selected }));
+    setRevealed(true);
+  };
+
+  const handleNext = () => {
+    if (qIdx < QUESTIONS.length - 1) {
+      setQIdx(qIdx + 1);
+      setSelected(null);
+      setRevealed(false);
+      topRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      setScreen("results");
+    }
+  };
+
+  const restart = () => {
+    setScreen("intro"); setQIdx(0); setAnswers({});
+    setSelected(null); setRevealed(false); setFilterCat("All");
+    topRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const getOptionStyle = (i) => {
+    let bg = T.surface, border = `1.5px solid ${T.border}`, color = T.text, shadow = "none";
+    if (!revealed && selected === i) {
+      bg = T.accentLight; border = `2px solid ${T.accent}`; color = T.accent;
+      shadow = `0 0 0 3px ${T.accentBorder}55`;
+    }
+    if (revealed) {
+      if (i === q.correct) { bg = T.successBg; border = `2px solid ${T.successBorder}`; color = T.success; shadow = `0 0 0 3px rgba(134,239,172,0.3)`; }
+      else if (i === selected) { bg = T.errorBg; border = `2px solid ${T.errorBorder}`; color = T.error; shadow = `0 0 0 3px rgba(254,202,202,0.4)`; }
+    }
+    return { display: "flex", alignItems: "flex-start", gap: "14px", padding: "15px 18px", borderRadius: "12px", border, background: bg, color, cursor: revealed ? "default" : "pointer", transition: "all 0.2s ease", boxShadow: shadow, marginBottom: "9px" };
+  };
+
+  const optLabel = (i) => {
+    if (revealed && i === q.correct) return "✓";
+    if (revealed && i === selected && selected !== q.correct) return "✗";
+    return String.fromCharCode(65 + i);
+  };
+
+  const filterQs = filterCat === "All" ? QUESTIONS : QUESTIONS.filter(qq => qq.cat === filterCat);
+
+  return (
+    <div ref={topRef} style={{ minHeight: "100vh", background: T.bg, fontFamily: "'Outfit', 'Segoe UI', sans-serif", color: T.text }}>
+      <FontLoader />
+
+      {/* ── STICKY NAV ── */}
+      <div style={{
+        background: "rgba(255,255,255,0.92)", backdropFilter: "blur(12px)",
+        borderBottom: `1px solid ${T.border}`, position: "sticky", top: 0, zIndex: 100,
+        boxShadow: "0 1px 10px rgba(0,0,0,0.06)",
+      }}>
+        <div style={{ maxWidth: "740px", margin: "0 auto", height: "60px", padding: "0 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <div style={{ width: "32px", height: "32px", background: T.accent, borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "16px", flexShrink: 0 }}>🔍</div>
+            <span style={{ fontSize: "16px", fontWeight: 700 }}>SEO Assessment</span>
+          </div>
+
+          {screen === "quiz" && (
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "13px", color: T.textMuted, fontWeight: 500 }}>Q{qIdx + 1}/{QUESTIONS.length}</span>
+              <div style={{ width: "100px", height: "5px", background: T.border, borderRadius: "99px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${((qIdx + 1) / QUESTIONS.length) * 100}%`, background: T.accent, borderRadius: "99px", transition: "width 0.4s ease" }} />
+              </div>
+            </div>
+          )}
+
+          {screen !== "intro" && (
+            <Btn variant="ghost" onClick={restart} extStyle={{ padding: "6px 12px", fontSize: "13px" }}>
+              ↩ Restart
+            </Btn>
+          )}
+        </div>
+      </div>
+
+      {/* ── CONTENT AREA ── */}
+      <div style={{ maxWidth: "740px", margin: "0 auto", padding: "32px 20px 80px" }}>
+
+        {/* ════════════════════════════════════════════════════════
+            INTRO
+        ════════════════════════════════════════════════════════ */}
+        {screen === "intro" && (
+          <div style={{ animation: "fadeUp 0.4s ease" }}>
+            <div style={{ textAlign: "center", padding: "24px 0 40px" }}>
+              <div style={{
+                display: "inline-flex", alignItems: "center", gap: "8px",
+                background: T.accentLight, border: `1.5px solid ${T.accentBorder}`,
+                borderRadius: "99px", padding: "7px 18px", marginBottom: "28px",
+              }}>
+                <span style={{ fontSize: "13px" }}>🏅</span>
+                <span style={{ fontSize: "13px", fontWeight: 700, color: T.accent }}>SEO Specialist Assessment</span>
+              </div>
+
+              <h1 style={{
+                fontSize: "clamp(28px, 6vw, 48px)", fontWeight: 800, lineHeight: 1.15,
+                margin: "0 0 16px", color: T.text,
+                fontFamily: "'Lora', Georgia, serif",
+              }}>
+                How strong is your<br />
+                <span style={{ color: T.accent }}>SEO expertise?</span>
+              </h1>
+
+              <p style={{ fontSize: "16px", color: T.textSub, maxWidth: "480px", margin: "0 auto 36px", lineHeight: 1.75 }}>
+                20 scenario-based questions across <strong style={{ color: T.text }}>On-Page</strong>, <strong style={{ color: T.text }}>Technical</strong>, and <strong style={{ color: T.text }}>Off-Page SEO</strong>. Real situations, not just definitions. Find out your level.
+              </p>
+            </div>
+
+            {/* Category overview */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "14px", marginBottom: "24px" }}>
+              {Object.entries(CATS).map(([cat, cfg]) => {
+                const c = cfg.color;
+                const count = QUESTIONS.filter(qq => qq.cat === cat).length;
+                const diffs = ["Beginner", "Intermediate", "Advanced"].map(d => QUESTIONS.filter(qq => qq.cat === cat && qq.diff === d).length);
+                return (
+                  <div key={cat} style={{ background: c.bg, border: `1.5px solid ${c.border}`, borderRadius: "16px", padding: "20px 16px" }}>
+                    <div style={{ fontSize: "28px", marginBottom: "10px" }}>{cfg.emoji}</div>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: c.accent, marginBottom: "6px" }}>{cat}</div>
+                    <div style={{ fontSize: "13px", color: T.textMuted, marginBottom: "10px" }}>{count} questions</div>
+                    <div style={{ display: "flex", gap: "4px" }}>
+                      {["🟢", "🟡", "🔴"].map((dot, i) => diffs[i] > 0 && (
+                        <span key={i} style={{ fontSize: "10px" }} title={["Beginner","Intermediate","Advanced"][i]}>
+                          {dot} {diffs[i]}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Level bands */}
+            <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: "16px", padding: "26px 28px", marginBottom: "32px", boxShadow: "0 1px 8px rgba(0,0,0,0.05)" }}>
+              <p style={{ fontSize: "12px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 18px" }}>Your result unlocks</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px" }}>
+                {LEVELS.map(l => (
+                  <div key={l.label} style={{ display: "flex", alignItems: "center", gap: "12px", background: T.surfaceAlt, borderRadius: "10px", padding: "12px 14px" }}>
+                    <span style={{ fontSize: "24px" }}>{l.emoji}</span>
+                    <div>
+                      <div style={{ fontSize: "14px", fontWeight: 700, color: T.text }}>{l.label}</div>
+                      <div style={{ fontSize: "11px", color: T.textMuted }}>{l.min}–{l.max} / 20</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center" }}>
+              <Btn onClick={() => setScreen("quiz")} extStyle={{ padding: "16px 52px", fontSize: "16px" }}>
+                Begin Assessment →
+              </Btn>
+              <p style={{ fontSize: "13px", color: T.textMuted, marginTop: "14px" }}>≈ 10–15 min · No time limit · Instant explanations after each answer</p>
+            </div>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════
+            QUIZ
+        ════════════════════════════════════════════════════════ */}
+        {screen === "quiz" && q && (
+          <div style={{ animation: "fadeUp 0.3s ease" }}>
+            {/* Dot progress trail */}
+            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginBottom: "28px" }}>
+              {QUESTIONS.map((qq, i) => {
+                const done = answers[qq.id] !== undefined;
+                const correct = answers[qq.id] === qq.correct;
+                return (
+                  <div key={i} title={`Q${i + 1}: ${qq.cat}`} style={{
+                    width: "11px", height: "11px", borderRadius: "50%",
+                    background: i === qIdx ? T.accent : done ? (correct ? "#16A34A" : "#DC2626") : T.border,
+                    transition: "background 0.3s",
+                    cursor: "default",
+                  }} />
+                );
+              })}
+            </div>
+
+            {/* Question card */}
+            <div style={{
+              background: T.surface,
+              border: `1px solid ${T.border}`,
+              borderRadius: "20px",
+              padding: "clamp(22px, 4vw, 36px)",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
+            }}>
+              {/* Category + difficulty badges */}
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
+                <Badge colors={CATS[q.cat].color}>{CATS[q.cat].emoji} {q.cat}</Badge>
+                <Badge colors={DIFFS[q.diff]}>{q.diff}</Badge>
+                <span style={{ marginLeft: "auto", fontSize: "13px", color: T.textMuted, fontWeight: 600, alignSelf: "center" }}>
+                  Question {qIdx + 1} of {QUESTIONS.length}
+                </span>
+              </div>
+
+              {/* Scenario banner */}
+              <div style={{
+                background: T.surfaceAlt,
+                border: `1.5px solid ${T.border}`,
+                borderRadius: "12px",
+                padding: "14px 18px",
+                marginBottom: "22px",
+                fontSize: "14px",
+                color: T.textSub,
+                lineHeight: 1.7,
+              }}>
+                {q.context}
+              </div>
+
+              {/* Question text */}
+              <h2 style={{
+                fontSize: "clamp(17px, 2.8vw, 21px)",
+                fontWeight: 600,
+                fontFamily: "'Lora', Georgia, serif",
+                lineHeight: 1.55,
+                color: T.text,
+                margin: "0 0 26px",
+              }}>
+                {q.question}
+              </h2>
+
+              {/* Options */}
+              <div role="radiogroup">
+                {q.options.map((opt, i) => (
+                  <div
+                    key={i}
+                    role="radio"
+                    aria-checked={selected === i}
+                    onClick={() => !revealed && setSelected(i)}
+                    style={getOptionStyle(i)}
+                  >
+                    {/* Letter circle */}
+                    <div style={{
+                      width: "30px", height: "30px", borderRadius: "50%", flexShrink: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "13px", fontWeight: 800,
+                      transition: "all 0.2s",
+                      background: revealed && i === q.correct ? "#16A34A"
+                        : revealed && i === selected ? "#DC2626"
+                        : selected === i ? T.accent
+                        : T.surfaceAlt,
+                      color: (revealed && (i === q.correct || i === selected)) ? "#fff"
+                        : selected === i ? "#fff"
+                        : T.textSub,
+                      border: (!revealed && selected !== i) ? `1.5px solid ${T.border}` : "none",
+                    }}>
+                      {optLabel(i)}
+                    </div>
+                    <span style={{ fontSize: "15px", lineHeight: 1.6, paddingTop: "3px" }}>{opt}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Explanation panel */}
+              {revealed && (
+                <div style={{
+                  marginTop: "22px",
+                  background: selected === q.correct ? T.successBg : T.errorBg,
+                  border: `1.5px solid ${selected === q.correct ? T.successBorder : T.errorBorder}`,
+                  borderRadius: "14px",
+                  padding: "20px 22px",
+                  animation: "fadeUp 0.25s ease",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                    <span style={{ fontSize: "20px" }}>{selected === q.correct ? "✅" : "❌"}</span>
+                    <span style={{
+                      fontSize: "15px", fontWeight: 700,
+                      color: selected === q.correct ? T.successText : T.errorText,
+                    }}>
+                      {selected === q.correct ? "Correct!" : "Not quite — here's the full explanation:"}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: "14px", color: T.textSub, lineHeight: 1.8, margin: 0 }}>
+                    {q.explanation}
+                  </p>
+                </div>
+              )}
+
+              {/* Action row */}
+              <div style={{ marginTop: "26px", display: "flex", justifyContent: "flex-end", gap: "12px" }}>
+                {!revealed ? (
+                  <Btn onClick={handleSubmit} disabled={selected === null}>
+                    {selected !== null ? "Submit Answer" : "Select an option above"}
+                  </Btn>
+                ) : (
+                  <Btn variant="success" onClick={handleNext}>
+                    {qIdx < QUESTIONS.length - 1 ? "Next Question →" : "See My Results →"}
+                  </Btn>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════
+            RESULTS
+        ════════════════════════════════════════════════════════ */}
+        {screen === "results" && (
+          <div style={{ animation: "fadeUp 0.4s ease" }}>
+            {/* Score hero card */}
+            <div style={{
+              background: T.surface, border: `1px solid ${T.border}`, borderRadius: "22px",
+              padding: "40px 32px", textAlign: "center", marginBottom: "20px",
+              boxShadow: "0 4px 24px rgba(0,0,0,0.07)",
+            }}>
+              <div style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1.2px", color: T.textMuted, marginBottom: "18px" }}>Your Result</div>
+              <div style={{
+                fontSize: "clamp(56px, 10vw, 80px)", fontWeight: 800, lineHeight: 1,
+                fontFamily: "'Lora', Georgia, serif", color: T.text, marginBottom: "6px",
+              }}>
+                {score}<span style={{ fontSize: "clamp(24px, 4vw, 36px)", color: T.textMuted, fontWeight: 500 }}>/{QUESTIONS.length}</span>
+              </div>
+              <div style={{ fontSize: "36px", margin: "10px 0 14px" }}>{level.emoji}</div>
+              <div style={{
+                display: "inline-block",
+                background: T.accentLight,
+                border: `1.5px solid ${T.accentBorder}`,
+                borderRadius: "99px", padding: "8px 24px",
+                color: T.accent, fontWeight: 800, fontSize: "17px",
+                marginBottom: "16px",
+              }}>
+                {level.label}
+              </div>
+              <p style={{ fontSize: "15px", color: T.textSub, maxWidth: "460px", margin: "0 auto", lineHeight: 1.75 }}>
+                {level.desc}
+              </p>
+            </div>
+
+            {/* Category breakdown */}
+            <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: "20px", padding: "28px", marginBottom: "20px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+              <h3 style={{ fontSize: "13px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 22px" }}>Performance by Category</h3>
+              <div style={{ display: "grid", gap: "22px" }}>
+                {catStats.map(({ cat, correct, total, pct }) => {
+                  const c = CATS[cat].color;
+                  const barColor = pct >= 67 ? "#16A34A" : pct >= 34 ? "#D97706" : "#DC2626";
+                  const label = pct === 100 ? "🏆 Perfect!" : pct >= 67 ? "Strong" : pct >= 34 ? "Developing" : "Needs focus";
+                  return (
+                    <div key={cat}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <span style={{ fontSize: "18px" }}>{CATS[cat].emoji}</span>
+                          <span style={{ fontSize: "15px", fontWeight: 700, color: T.text }}>{cat}</span>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                          <span style={{ fontSize: "13px", fontWeight: 700, color: barColor }}>{pct}%</span>
+                          <span style={{ fontSize: "13px", color: T.textMuted }}>{correct}/{total}</span>
+                        </div>
+                      </div>
+                      <div style={{ height: "8px", background: T.border, borderRadius: "99px", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, background: barColor, borderRadius: "99px", transition: "width 0.9s cubic-bezier(0.4,0,0.2,1)" }} />
+                      </div>
+                      <div style={{ fontSize: "12px", color: T.textMuted, marginTop: "5px" }}>{label}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Q-by-Q answer dots */}
+            <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: "20px", padding: "22px 26px", marginBottom: "28px", boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+              <h3 style={{ fontSize: "13px", fontWeight: 700, color: T.textMuted, textTransform: "uppercase", letterSpacing: "1px", margin: "0 0 16px" }}>Question Breakdown</h3>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {QUESTIONS.map((qq, i) => {
+                  const ok = answers[qq.id] === qq.correct;
+                  return (
+                    <div key={i} title={`Q${i + 1}: ${qq.cat} · ${qq.diff}`} style={{
+                      width: "38px", height: "38px", borderRadius: "9px",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      background: ok ? T.successBg : T.errorBg,
+                      border: `1.5px solid ${ok ? T.successBorder : T.errorBorder}`,
+                      fontSize: "14px", fontWeight: 800,
+                      color: ok ? T.successText : T.errorText,
+                    }}>
+                      {ok ? "✓" : "✗"}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+              <Btn variant="secondary" onClick={() => setScreen("review")}>📋 Review All Answers</Btn>
+              <Btn onClick={restart}>↩ Retake Quiz</Btn>
+            </div>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════
+            REVIEW
+        ════════════════════════════════════════════════════════ */}
+        {screen === "review" && (
+          <div style={{ animation: "fadeUp 0.3s ease" }}>
+            {/* Nav + filters */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "24px", flexWrap: "wrap" }}>
+              <Btn variant="ghost" onClick={() => setScreen("results")} extStyle={{ padding: "6px 10px", fontSize: "14px" }}>← Results</Btn>
+              <div style={{ width: "1px", height: "20px", background: T.border, margin: "0 4px" }} />
+              {["All", "On-Page SEO", "Technical SEO", "Off-Page SEO"].map(f => (
+                <button key={f} onClick={() => setFilterCat(f)} style={{
+                  background: filterCat === f ? T.accentLight : T.surface,
+                  border: `1.5px solid ${filterCat === f ? T.accentBorder : T.border}`,
+                  color: filterCat === f ? T.accent : T.textSub,
+                  padding: "7px 16px", borderRadius: "99px",
+                  fontSize: "13px", fontWeight: 700,
+                  cursor: "pointer", fontFamily: "inherit",
+                  transition: "all 0.18s",
+                }}>{f}</button>
+              ))}
+            </div>
+
+            {/* Score mini bar */}
+            <div style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: "14px", padding: "16px 20px", marginBottom: "22px", display: "flex", alignItems: "center", gap: "16px" }}>
+              <span style={{ fontSize: "14px", fontWeight: 700, color: T.text }}>{score}/{QUESTIONS.length} correct</span>
+              <div style={{ flex: 1, height: "6px", background: T.border, borderRadius: "99px", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${(score / QUESTIONS.length) * 100}%`, background: T.accent, borderRadius: "99px" }} />
+              </div>
+              <span style={{ fontSize: "13px", color: T.textMuted }}>{filterCat === "All" ? "All categories" : filterCat}</span>
+            </div>
+
+            {/* Review cards */}
+            <div style={{ display: "grid", gap: "16px" }}>
+              {filterQs.map((qq) => {
+                const userAns = answers[qq.id];
+                const ok = userAns === qq.correct;
+                const qNum = QUESTIONS.indexOf(qq) + 1;
+                return (
+                  <div key={qq.id} style={{
+                    background: T.surface,
+                    border: `1.5px solid ${ok ? T.successBorder : T.errorBorder}`,
+                    borderRadius: "18px", padding: "24px 26px",
+                    boxShadow: "0 2px 12px rgba(0,0,0,0.05)",
+                  }}>
+                    {/* Top row */}
+                    <div style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "14px" }}>
+                      <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                        <Badge colors={CATS[qq.cat].color}>{CATS[qq.cat].emoji} {qq.cat}</Badge>
+                        <Badge colors={DIFFS[qq.diff]}>{qq.diff}</Badge>
+                      </div>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: ok ? T.successText : T.errorText }}>
+                        {ok ? "✅ Correct" : "❌ Incorrect"}
+                      </span>
+                    </div>
+
+                    {/* Q text */}
+                    <p style={{ fontSize: "15px", fontFamily: "'Lora', Georgia, serif", fontWeight: 600, color: T.text, lineHeight: 1.6, margin: "0 0 8px" }}>
+                      Q{qNum}. {qq.question}
+                    </p>
+                    <p style={{ fontSize: "13px", color: T.textMuted, margin: "0 0 16px", lineHeight: 1.65 }}>{qq.context}</p>
+
+                    {/* Answer boxes */}
+                    {userAns !== undefined && !ok && (
+                      <div style={{ background: T.errorBg, border: `1.5px solid ${T.errorBorder}`, borderRadius: "10px", padding: "11px 15px", marginBottom: "8px", fontSize: "14px", color: T.errorText }}>
+                        <strong>Your answer:</strong> {qq.options[userAns]}
+                      </div>
+                    )}
+                    <div style={{ background: T.successBg, border: `1.5px solid ${T.successBorder}`, borderRadius: "10px", padding: "11px 15px", marginBottom: "14px", fontSize: "14px", color: T.successText }}>
+                      <strong>Correct answer:</strong> {qq.options[qq.correct]}
+                    </div>
+
+                    {/* Explanation */}
+                    <div style={{ background: T.surfaceAlt, border: `1px solid ${T.border}`, borderRadius: "10px", padding: "14px 16px", fontSize: "14px", color: T.textSub, lineHeight: 1.8 }}>
+                      💡 {qq.explanation}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{ textAlign: "center", marginTop: "36px" }}>
+              <Btn onClick={restart} extStyle={{ padding: "16px 52px", fontSize: "16px" }}>↩ Retake Quiz</Btn>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        @keyframes fadeUp { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+      `}</style>
+    </div>
+  );
+}
